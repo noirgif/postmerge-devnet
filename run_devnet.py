@@ -158,6 +158,7 @@ def start_node(no=1) -> list[subprocess.Popen]:
             ['xfce4-terminal', '-e', ' '.join(beacon_cmd)])
     
     # check if beacon node is running
+    sleep(3)
     if check_error([beacon_proc]) != 0:
         print("Beacon node not running")
         with open(node_path / 'beacon.log', 'r') as f:
