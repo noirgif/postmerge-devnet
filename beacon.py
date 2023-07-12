@@ -39,7 +39,7 @@ class PrysmNode(BeaconNode):
             f'--execution-endpoint=http://localhost:{geth_authrpc_port(1)}',
             '--accept-terms-of-use',
             f'--jwt-secret={NODE_PATH[1] / "jwt.hex"}',
-
+            f'--monitoring-port={beacon_monitoring_port(self.no)}',
             f'--suggested-fee-recipient=0x{ADDRESSES[self.no - 1]}',
             *beacon_peer_arguments]
 

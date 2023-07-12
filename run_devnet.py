@@ -144,7 +144,7 @@ def start_node(no=1) -> list[subprocess.Popen]:
     GETH_PEERS.append(enodeUrl)
 
     # start beacon node
-    beacon : BeaconNode = TekuNode(no)
+    beacon : BeaconNode = PrysmNode(no)
     
     beacon_cmd : list[str] = beacon.get_args()
 
