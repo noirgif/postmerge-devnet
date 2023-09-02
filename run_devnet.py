@@ -14,19 +14,6 @@ from validator import PrysmValidator
 from eth_executor import GethNode
 from node_config import NodeConfig, NodeConfigBuilder
 
-from port_assignment import beacon_port, beacon_grpc_port, beacon_p2p_tcp_port, beacon_p2p_udp_port, geth_peer_port, geth_http_port, geth_ws_port, geth_authrpc_port, validator_grpc_port, validator_rpc_port
-
-
-def setup(config: NodeConfig):
-    config.devnet_path.mkdir(exist_ok=True)
-    os.chdir(config.devnet_path)
-
-    with open('config.yml', 'w') as f:
-        f.write(config.config_yml)
-
-    with open('genesis.json', 'w') as f:
-        f.write(config.genesis_json)
-
 
 def setup_node(no, config: NodeConfig):
     if no < 0 or no >= config.num_nodes:
@@ -66,6 +53,25 @@ def setup_node(no, config: NodeConfig):
     with open(node_path / "jwt.hex", 'w') as f:
         f.write(subprocess.run(['openssl', 'rand', '-hex', '32'],
                 capture_output=True, text=True).stdout.strip())
+
+
+def setup(config: NodeConfig):
+    if config.reset:
+        if config.devnet_path.exists():
+            retry(os.system, f"rm -r {config.devnet_path}")
+
+    config.devnet_path.mkdir(exist_ok=True)
+    os.chdir(config.devnet_path)
+
+    with open('config.yml', 'w') as f:
+        f.write(config.config_yml)
+
+    with open('genesis.json', 'w') as f:
+        f.write(config.genesis_json)
+    
+    for no in range(config.num_nodes):
+        setup_node(no, config)
+
 
 def start_node(no, config: NodeConfig) -> list[subprocess.Popen]:
     """Starts a node with the given number
@@ -125,22 +131,20 @@ def send_interrupt(*procs: tuple[list[subprocess.Popen]]):
         os.kill(proc.pid, signal.SIGINT)
 
 
-if __name__ == '__main__':
+@fire.Fire
+def main(no=1):
     os.system(f"killall validator geth beacon-chain")
-    config = NodeConfigBuilder().build()
-    if config.devnet_path.exists():
-        retry(os.system, f"rm -r {config.devnet_path}")
+    config = NodeConfigBuilder().with_num_nodes(no).build()
 
-    setup()
-    setup_node(1)
-    setup_node(2)
+    setup(config)
 
-    clients = start_node(1)
-    # wait 6x12 seconds to join
-    WAIT_SECONDS = 80
-    sleep(WAIT_SECONDS)
-    clients2 = start_node(2)
-    # clients2 = []
+    clients = []
+    for no in range(config.num_nodes):
+        if no != 0:
+            # wait 6x12 seconds to join
+            WAIT_SECONDS = 80
+            sleep(WAIT_SECONDS)
+        clients.append(start_node(no))
 
     if not config.create_new_terminal and False:
         from terminals import run_in_curses
@@ -153,4 +157,4 @@ if __name__ == '__main__':
     else:
         input("Press enter to continue...")
 
-    check_error(clients, clients2)
+    check_error(*clients)

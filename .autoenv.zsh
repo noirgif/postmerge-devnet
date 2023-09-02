@@ -17,3 +17,5 @@ function valog() {
 function belog() {
     less $DEVNET_PATH/node$1/beacon.log
 }
+
+poetry shell
