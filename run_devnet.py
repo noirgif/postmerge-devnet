@@ -16,6 +16,16 @@ from node_config import NodeConfig, NodeConfigBuilder
 
 
 def setup_node(no, config: NodeConfig):
+    """
+    Sets up a node by creating the necessary directories and configuration files.
+
+    Args:
+        no (int): The node number to set up.
+        config (NodeConfig): The configuration object for the devnet.
+
+    Returns:
+        None
+    """
     if no < 0 or no >= config.num_nodes:
         raise ValueError(
             f"Node number must be between 0 and {config.num_nodes-1} (inclusive)")
@@ -34,7 +44,7 @@ def setup_node(no, config: NodeConfig):
             'prysmctl',
             'testnet',
             'generate-genesis',
-            '--fork=bellatrix',
+            '--fork=capella',
             '--num-validators=64',
             f'--output-ssz={config.devnet_path / "genesis.ssz"}',
             f'--chain-config-file={config.devnet_path / "config.yml"}',
@@ -56,6 +66,15 @@ def setup_node(no, config: NodeConfig):
 
 
 def setup(config: NodeConfig):
+    """
+    Sets up the devnet by creating the necessary directories and configuration files and setup each node
+
+    Args:
+        config (NodeConfig): The configuration object for the devnet.
+
+    Returns:
+        None
+    """
     if config.reset:
         if config.devnet_path.exists():
             retry(os.system, f"rm -r {config.devnet_path}")
@@ -74,9 +93,16 @@ def setup(config: NodeConfig):
 
 
 def start_node(no, config: NodeConfig) -> list[subprocess.Popen]:
-    """Starts a node with the given number
-    Returns the processes for geth, beacon and validator"""
+    """
+    Starts a node with the given number and returns the processes for geth, beacon and validator.
 
+    Args:
+        no (int): The node number to start.
+        config (NodeConfig): The configuration object for the devnet.
+
+    Returns:
+        A list of subprocess.Popen objects for the geth, beacon and validator processes.
+    """
     if no < 0 or no >= config.num_nodes:
         raise ValueError(
             f"Node number must be between 0 and {config.num_nodes-1} (inclusive)")
@@ -97,7 +123,7 @@ def start_node(no, config: NodeConfig) -> list[subprocess.Popen]:
     config.geth_peers.append(enodeUrl)
 
     # start beacon node
-    beacon : BeaconNode = TekuNode(no, config)
+    beacon : BeaconNode = PrysmNode(no, config)
     beacon_proc = beacon.run()
     
     # check if beacon node is running
@@ -118,23 +144,40 @@ def start_node(no, config: NodeConfig) -> list[subprocess.Popen]:
     if peer:
         config.peers.append(peer)
     else:
-        print("Could not get peer")
+        print("[Error] Could not get p2p address of the node")
         return []
 
     return list(filter(None, [geth_proc, beacon_proc, validator_proc]))
 
 
 def send_interrupt(*procs: tuple[list[subprocess.Popen]]):
+    """
+    Sends a SIGINT signal to the specified processes.
+
+    Args:
+        *procs: A variable number of tuples, where each tuple contains a list of subprocess.Popen objects.
+
+    Returns:
+        None
+    """
     for proc in itertools.chain.from_iterable(procs):
         if proc is None:
             continue
         os.kill(proc.pid, signal.SIGINT)
 
 
-@fire.Fire
-def main(no=1):
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+                    prog='run_devnet.py',
+                    description='Run a 2-node devnet for testing purposes',
+    )
+    parser.add_argument('-n', '--num-nodes', type=int, default=2,)
+
+    args = parser.parse_args()
+
     os.system(f"killall validator geth beacon-chain")
-    config = NodeConfigBuilder().with_num_nodes(no).build()
+    config = NodeConfigBuilder().with_num_nodes(args.num_nodes).build()
 
     setup(config)
 
@@ -144,7 +187,7 @@ def main(no=1):
             # wait 6x12 seconds to join
             WAIT_SECONDS = 80
             sleep(WAIT_SECONDS)
-        clients.append(start_node(no))
+        clients.append(start_node(no, config))
 
     if not config.create_new_terminal and False:
         from terminals import run_in_curses
@@ -158,3 +201,6 @@ def main(no=1):
         input("Press enter to continue...")
 
     check_error(*clients)
+
+if __name__ == '__main__':
+    main()

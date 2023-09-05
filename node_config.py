@@ -101,6 +101,8 @@ class NodeConfig:
     @property
     def contract_address(self):
         try:
+            # hard-coded contract specified in genesis.json
+            return "1010101010101010101010101010101010101010"
             return self.contract_address_path.read_text()
         except Exception as e:
             print("Failed to read contract address file", file=sys.stderr)

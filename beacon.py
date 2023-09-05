@@ -51,7 +51,7 @@ class PrysmNode(BeaconNode):
             # 0 for first node, 1 for second node
             f'--min-sync-peers={self.no}',
             f"--genesis-state={self.devnet_path / 'genesis.ssz'}",
-            "--interop-eth1data-votes",
+            "--contract-deployment-block=0",
             '--bootstrap-node=',
             f'--chain-config-file={self.devnet_path / "config.yml"}',
             '--chain-id=32382',
@@ -65,6 +65,7 @@ class PrysmNode(BeaconNode):
             f'--p2p-static-id',
             f'--execution-endpoint=http://localhost:{port_assignment.geth_authrpc_port(FIRST_NODE)}',
             '--accept-terms-of-use',
+            f'--monitoring-port={port_assignment.beacon_monitoring_port(self.no)}',
             f'--jwt-secret={self.node_path / "jwt.hex"}',
 
             f'--suggested-fee-recipient=0x{self.address}',

@@ -9,6 +9,7 @@ class EthExecutor:
         self.node_path = config.node_path[no]
         self.geth_path = config.geth_path[no]
         self.log_path = self.node_path / 'geth.log'
+        self.create_new_terminal = config.create_new_terminal
     
     def set_log_path(self, log_path: str):
         self.log_path = log_path
@@ -33,7 +34,7 @@ class GethNode(EthExecutor):
         geth_cmd = [
             'geth',
             '--http',
-            '--http.api=eth,engine',
+            '--http.api=eth,net,web3',
             f'--datadir={self.geth_path}',
             '--allow-insecure-unlock',
             f'--unlock=0x{self.address}',
