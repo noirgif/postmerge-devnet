@@ -16,11 +16,7 @@
 		"arrowGlacierBlock": 0,
 		"grayGlacierBlock": 0,
 		"shanghaiTime": 1693325958,
-		"terminalTotalDifficultyPassed": true,
-		"clique": {
-			"period": 5,
-			"epoch": 30000
-		}
+		"terminalTotalDifficultyPassed": true
 	},
 	"nonce": "0x0",
 	"timestamp": "0x64ee19f6",

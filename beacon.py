@@ -7,7 +7,7 @@ import port_assignment
 FIRST_NODE = 0
 
 class BeaconNode:
-    def __init__(self, no, config: NodeConfig) -> None:
+    def __init__(self, no: int, config: NodeConfig) -> None:
         self.no = no
         self.node_path = config.node_path[no]
         self.devnet_path = config.devnet_path
@@ -49,7 +49,7 @@ class PrysmNode(BeaconNode):
             'beacon-chain',
             f"--datadir={self.node_path / 'beacondata'}",
             # 0 for first node, 1 for second node
-            f'--min-sync-peers={self.no}',
+            f'--min-sync-peers=0',
             f"--genesis-state={self.devnet_path / 'genesis.ssz'}",
             "--contract-deployment-block=0",
             '--bootstrap-node=',
@@ -63,7 +63,7 @@ class PrysmNode(BeaconNode):
             f'--p2p-tcp-port={port_assignment.beacon_p2p_tcp_port(self.no)}',
             f'--p2p-udp-port={port_assignment.beacon_p2p_udp_port(self.no)}',
             f'--p2p-static-id',
-            f'--execution-endpoint=http://localhost:{port_assignment.geth_authrpc_port(FIRST_NODE)}',
+            f'--execution-endpoint=http://localhost:{port_assignment.geth_authrpc_port(self.no)}',
             '--accept-terms-of-use',
             f'--monitoring-port={port_assignment.beacon_monitoring_port(self.no)}',
             f'--jwt-secret={self.node_path / "jwt.hex"}',
