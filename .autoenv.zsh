@@ -18,5 +18,6 @@ function belog() {
     less $DEVNET_PATH/node$1/beacon.log
 }
 
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-poetry shell
+if [[ -z "$VIRTUAL_ENV" ]] ; then
+    poetry shell
+fi

@@ -39,6 +39,7 @@ class PrysmValidator(Validator):
             f'--chain-config-file={self.devnet_path / "config.yml"}',
             f'--grpc-gateway-port={port_assignment.validator_grpc_port(self.no)}',
             f'--rpc-port={port_assignment.validator_rpc_port(self.no)}',
+            f'--monitoring-port={port_assignment.validator_monitoring_port(self.no)}',
         ]
 
         with open(self.log_path, 'w') as validator_log:
